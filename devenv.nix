@@ -1,5 +1,6 @@
 {pkgs, ...}: {
   cachix.enable = false;
+  devenv.warnOnNewVersion = false;
 
   languages.rust = {
     enable = true;

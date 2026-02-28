@@ -6,6 +6,10 @@ Begin met een “engine-first” architectuur. Maak de synchronisatie en storage
 daarbovenop een UI-crate (TUI/GUI) en eventueel een CLI-crate. Dit voorkomt dat je later je protocol- en data-laag moet
 “uittrekken” uit je UI.
 
+Voor de UI is `iced + webview` een sterke combinatie: gebruik `iced` voor app-shell, state management en native controls,
+en gebruik een `webview` voor het renderen van complexe HTML-mail. Houd de grens scherp: engine + data in pure Rust,
+presentatie in de UI-laag.
+
 Kies één async-runtime en blijf consequent. In de praktijk is Tokio de meest frictieloze keuze voor netwerk-I/O, timers
 en task orchestration. Zet harde timeouts op DNS/connect/read/write, en ontwerp reconnect/backoff als eerste-klas
 gedrag, anders voelt je client willekeurig “instabiel”.
@@ -38,9 +42,9 @@ Behandel mail parsing als “hostile input”.
 
 Storage en search bepalen hoe “snel” je client voelt.
 
-* SQLite is prima als basis (embedded, betrouwbaar). Gebruik een schema met: accounts, mailboxes, messages (metadata),
+* Turso is prima als basis (libSQL, betrouwbaar). Gebruik een schema met: accounts, mailboxes, messages (metadata),
   message_bodies (raw blob), flags/labels, attachments (liefst content-addressed op disk).
-* Voor search: SQLite FTS5 is een pragmatische keuze; alternatief is Tantivy als je meer controle wilt. Indexeer
+* Voor search: Turso/libSQL FTS5 is een pragmatische keuze; alternatief is Tantivy als je meer controle wilt. Indexeer
   incrementally, niet “rebuild everything”.
 
 Maak “dedup” en idempotentie expliciet.
@@ -65,7 +69,8 @@ Houd je build en packaging netjes op NixOS.
 
 * Maak een flake met reproducible builds (bijv. met crane of naersk) en splits features (gui, keyring, html-rendering)
   zodat je minimale build altijd werkt.
-* Zet system dependencies (GTK/WebKit/openssl) achter features, en geef een “pure rustls” pad.
+* Voor `iced + webview`: zet system dependencies (WebKitGTK op Linux, plus evt. GTK) achter features, en geef een
+  “pure rustls” pad.
 
 Concreet startpad dat vaak werkt: eerst een headless sync-daemon + lokale DB + search, daarna pas UI. Als je UI vroeg
 bouwt, ga je te lang “gevoel” optimaliseren terwijl de sync-engine nog niet hard is.

@@ -2,7 +2,17 @@
 /*
 
 # unignore folders
+!crates
 !docs
 
 # unignore files
+!.env.example
+!.envrc
 !.gitignore
+!Cargo.lock
+!Cargo.toml
+!README.md
+!devenv.lock
+!devenv.nix
+!flake.nix
+!rust-toolchain.toml

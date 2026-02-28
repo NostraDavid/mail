@@ -1,4 +1,26 @@
-{pkgs, ...}: {
+{
+  pkgs,
+  lib,
+  ...
+}: let
+  runtimeLibs = with pkgs; [
+    libglvnd
+    libxkbcommon
+    mesa
+    vulkan-loader
+    wayland
+    wayland-protocols
+    xorg.libX11
+    xorg.libXcursor
+    xorg.libXi
+    xorg.libXrandr
+    xorg.libXrender
+    xorg.libXext
+    xorg.libXfixes
+    xorg.libxcb
+    xorg.libXinerama
+  ];
+in {
   cachix.enable = false;
   devenv.warnOnNewVersion = false;
 
@@ -17,6 +39,21 @@
     webkitgtk_4_1
     gtk3
     libsoup_3
+    libglvnd
+    libxkbcommon
+    mesa
+    vulkan-loader
+    wayland
+    wayland-protocols
+    xorg.libX11
+    xorg.libXcursor
+    xorg.libXi
+    xorg.libXrandr
+    xorg.libXrender
+    xorg.libXext
+    xorg.libXfixes
+    xorg.libxcb
+    xorg.libXinerama
   ];
 
   env = {
@@ -36,6 +73,7 @@
   };
 
   enterShell = ''
+    export LD_LIBRARY_PATH="${lib.makeLibraryPath runtimeLibs}:$LD_LIBRARY_PATH"
     echo "mail devenv actief"
     echo "Gebruik: build | check | fmt | lint | test | run"
   '';

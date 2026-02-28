@@ -6,8 +6,7 @@ license.workspace = true
 authors.workspace = true
 
 [dependencies]
-anyhow.workspace = true
+iced.workspace = true
 mail-engine = { path = "../mail-engine" }
-tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true

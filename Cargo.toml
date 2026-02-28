@@ -13,6 +13,7 @@ authors = ["mail contributors"]
 
 [workspace.dependencies]
 anyhow = "1.0.100"
+iced = { version = "0.13.1", default-features = false, features = ["tiny-skia", "fira-sans", "auto-detect-theme", "tokio"] }
 tokio = { version = "1.48.0", features = ["rt-multi-thread", "macros", "time"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "fmt"] }

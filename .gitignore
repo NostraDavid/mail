@@ -1,0 +1,8 @@
+# ignore all direct items, nonrecursively
+/*
+
+# unignore folders
+!docs
+
+# unignore files
+!.gitignore

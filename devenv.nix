@@ -27,6 +27,7 @@
   };
 
   scripts = {
+    build.exec = "cargo build --workspace";
     check.exec = "cargo check --workspace";
     fmt.exec = "cargo fmt --all";
     lint.exec = "cargo clippy --workspace --all-targets -- -D warnings";
@@ -36,6 +37,6 @@
 
   enterShell = ''
     echo "mail devenv actief"
-    echo "Gebruik: check | fmt | lint | test | run"
+    echo "Gebruik: build | check | fmt | lint | test | run"
   '';
 }

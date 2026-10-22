@@ -16,18 +16,26 @@ fn main() -> iced::Result {
         .try_init()
         .ok();
 
-    iced::application("mail", update, view).run_with(|| {
-        let mut state = MailApp::default();
-        state.google_client_id = DEFAULT_GOOGLE_CLIENT_ID.to_owned();
+    iced::application(
+        || {
+            let state = MailApp {
+                google_client_id: DEFAULT_GOOGLE_CLIENT_ID.to_owned(),
+                ..MailApp::default()
+            };
 
-        (
-            state,
-            Task::batch(vec![
-                Task::perform(load_saved_settings(), Message::SettingsLoaded),
-                Task::perform(restore_google_session(), Message::RestoreSessionDone),
-            ]),
-        )
-    })
+            (
+                state,
+                Task::batch(vec![
+                    Task::perform(load_saved_settings(), Message::SettingsLoaded),
+                    Task::perform(restore_google_session(), Message::RestoreSessionDone),
+                ]),
+            )
+        },
+        update,
+        view,
+    )
+    .title("mail")
+    .run()
 }
 
 #[derive(Debug, Clone)]
@@ -35,7 +43,7 @@ enum Message {
     SettingsLoaded(Result<SavedOAuthSettings, String>),
     ToggleGoogleSetup,
     SelectFolder(MailFolder),
-    SelectMessage(usize),
+    SelectMail(usize),
     GoogleClientIdChanged(String),
     GoogleClientSecretChanged(String),
     SaveGoogleSettings,
@@ -132,7 +140,7 @@ fn update(state: &mut MailApp, message: Message) -> Task<Message> {
             }
             Task::none()
         }
-        Message::SelectMessage(index) => {
+        Message::SelectMail(index) => {
             if index < state.messages.len() {
                 state.selected_message = Some(index);
             }
@@ -283,7 +291,10 @@ fn view(state: &MailApp) -> Element<'_, Message> {
             .height(iced::Fill),
     );
 
-    container(content).width(iced::Fill).height(iced::Fill).into()
+    container(content)
+        .width(iced::Fill)
+        .height(iced::Fill)
+        .into()
 }
 
 fn folder_pane(state: &MailApp, is_working: bool) -> Element<'_, Message> {
@@ -312,7 +323,8 @@ fn folder_pane(state: &MailApp, is_working: bool) -> Element<'_, Message> {
 }
 
 fn message_list_pane(state: &MailApp, is_working: bool) -> Element<'_, Message> {
-    let mut content = column![text(format!("{} berichten", state.selected_folder.label()))].spacing(6);
+    let mut content =
+        column![text(format!("{} berichten", state.selected_folder.label()))].spacing(6);
 
     if state.selected_folder != MailFolder::Inbox {
         content = content.push(text("Deze map is nog niet gekoppeld."));
@@ -334,7 +346,7 @@ fn message_list_pane(state: &MailApp, is_working: bool) -> Element<'_, Message> 
                 row_btn.style(iced::widget::button::secondary)
             };
             if !is_working {
-                row_btn = row_btn.on_press(Message::SelectMessage(index));
+                row_btn = row_btn.on_press(Message::SelectMail(index));
             }
             content = content.push(row_btn.width(iced::Fill));
         }

@@ -10,15 +10,15 @@
     vulkan-loader
     wayland
     wayland-protocols
-    xorg.libX11
-    xorg.libXcursor
-    xorg.libXi
-    xorg.libXrandr
-    xorg.libXrender
-    xorg.libXext
-    xorg.libXfixes
-    xorg.libxcb
-    xorg.libXinerama
+    libx11
+    libxcursor
+    libxi
+    libxrandr
+    libxrender
+    libxext
+    libxfixes
+    libxcb
+    libxinerama
   ];
 in {
   cachix.enable = false;
@@ -36,24 +36,21 @@ in {
     pkg-config
     openssl
     turso-cli
-    webkitgtk_4_1
-    gtk3
-    libsoup_3
     libglvnd
     libxkbcommon
     mesa
     vulkan-loader
     wayland
     wayland-protocols
-    xorg.libX11
-    xorg.libXcursor
-    xorg.libXi
-    xorg.libXrandr
-    xorg.libXrender
-    xorg.libXext
-    xorg.libXfixes
-    xorg.libxcb
-    xorg.libXinerama
+    libx11
+    libxcursor
+    libxi
+    libxrandr
+    libxrender
+    libxext
+    libxfixes
+    libxcb
+    libxinerama
   ];
 
   env = {

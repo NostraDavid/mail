@@ -3,8 +3,7 @@ use libsql::Builder;
 use oauth2::{
     AuthType, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, EndpointNotSet,
     EndpointSet, PkceCodeChallenge, PkceCodeVerifier, RedirectUrl, RefreshToken, Scope,
-    TokenResponse, TokenUrl,
-    basic::BasicClient,
+    TokenResponse, TokenUrl, basic::BasicClient,
 };
 use reqwest::Client;
 use serde::{Deserialize, de::DeserializeOwned};
@@ -178,7 +177,8 @@ impl Engine {
             match exchange_refresh_token(&oauth, refresh_token.to_owned()).await {
                 Ok(token_set) => {
                     if let Some(new_refresh_token) = token_set.refresh_token {
-                        self.save_refresh_token(provider, &new_refresh_token).await?;
+                        self.save_refresh_token(provider, &new_refresh_token)
+                            .await?;
                     }
                     return fetch_inbox(&config, &token_set.access_token).await;
                 }
@@ -256,7 +256,8 @@ impl Engine {
         };
 
         if let Some(new_refresh_token) = token_set.refresh_token {
-            self.save_refresh_token(provider, &new_refresh_token).await?;
+            self.save_refresh_token(provider, &new_refresh_token)
+                .await?;
         }
 
         let result = fetch_inbox(&config, &token_set.access_token).await?;
@@ -442,6 +443,8 @@ async fn open_conn() -> Result<libsql::Connection> {
 
     let db = Builder::new_local(path).build().await?;
     let conn = db.connect()?;
+    // Startup tasks can initialize the schema concurrently on separate connections.
+    conn.busy_timeout(Duration::from_secs(5))?;
     ensure_schema(&conn).await?;
     Ok(conn)
 }
@@ -681,7 +684,9 @@ async fn exchange_token(
 
     Ok(TokenSet {
         access_token: response.access_token().secret().to_owned(),
-        refresh_token: response.refresh_token().map(|token| token.secret().to_owned()),
+        refresh_token: response
+            .refresh_token()
+            .map(|token| token.secret().to_owned()),
     })
 }
 
@@ -698,7 +703,9 @@ async fn exchange_refresh_token(client: &OAuthClient, refresh_token: String) -> 
 
     Ok(TokenSet {
         access_token: response.access_token().secret().to_owned(),
-        refresh_token: response.refresh_token().map(|token| token.secret().to_owned()),
+        refresh_token: response
+            .refresh_token()
+            .map(|token| token.secret().to_owned()),
     })
 }
 
@@ -997,4 +1004,45 @@ struct GraphFrom {
 #[derive(Debug, Deserialize)]
 struct GraphEmailAddress {
     address: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn local_database_round_trips_synthetic_settings() -> Result<()> {
+        let database = Builder::new_local(":memory:").build().await?;
+        let connection = database.connect()?;
+        connection
+            .execute("CREATE TABLE settings (provider TEXT, client_id TEXT)", ())
+            .await?;
+        connection
+            .execute(
+                "INSERT INTO settings VALUES (?1, ?2)",
+                libsql::params!["google", "synthetic.apps.googleusercontent.com"],
+            )
+            .await?;
+        let mut rows = connection
+            .query("SELECT client_id FROM settings", ())
+            .await?;
+        let row = rows.next().await?.expect("inserted settings");
+        assert_eq!(
+            row.get::<String>(0)?,
+            "synthetic.apps.googleusercontent.com"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn google_response_decodes_synthetic_headers() -> Result<()> {
+        let response: GoogleMessageResponse = serde_json::from_str(
+            r#"{"payload":{"headers":[{"name":"Subject","value":"Synthetic message"},{"name":"From","value":"sender@example.invalid"}]},"snippet":"Example"}"#,
+        )?;
+        let (subject, from, date) = extract_google_headers(response.payload);
+        assert_eq!(subject, "Synthetic message");
+        assert_eq!(from, "sender@example.invalid");
+        assert_eq!(date, "(onbekend)");
+        Ok(())
+    }
 }

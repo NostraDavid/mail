@@ -19,20 +19,32 @@ Rust mail-client project met `direnv + devenv`.
 3. Controleer dat de workspace bouwt:
 
    ```bash
-   check
+   just setup
+   just check
+   just build
    ```
 
 4. Start de app:
 
    ```bash
-   run
+   just run
    ```
 
 ## Structuur
 
+Voer `just update` in de shell uit om de devenv- en Cargo-lockfiles te verversen.
+`devenv.nix` en `devenv.lock` definiëren de ontwikkelomgeving. Activeer die met
+`devenv shell` of direnv.
+Controleer daarna de wijzigingen met `just check`. Deze checks starten de app
+niet en gebruiken geen mailaccount. De bestaande shellcommando's `build`,
+`check`, `fmt`, `lint`, `test` en `run` blijven beschikbaar.
+
+`reqwest` blijft op 0.12 omdat `oauth2` 5 deze versie voor zijn HTTP-client
+vereist. Werk beide samen bij wanneer `oauth2` een nieuwere client ondersteunt.
+
 - `crates/mail-engine`: engine-first core library
 - `crates/mail`: binary crate (naam: `mail`)
-- `devenv.nix`: dev environment (Rust tooling + WebKit/GTK libs voor iced/webview)
+- `devenv.nix`: Rust-tooling en de X11/Wayland-bibliotheken voor Iced
 
 ## Turso
 
